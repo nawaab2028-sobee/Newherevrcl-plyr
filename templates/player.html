@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PW LIVE PLAYER</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<link rel="stylesheet" href="/static/css/comments.css">
 <style>
 :root {
     --bg:#0e0a12; --card:rgba(255,255,255,.045); --border:rgba(255,255,255,.09);
@@ -243,7 +244,71 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
                 <span class="progress-time right" id="progressRightTime">00:00:00</span>
             </div>
         </div>
+        <div class="stat-box">
+            <div class="stat-label">User's</div>
+            <div class="stat-value" id="statViewers">0</div>
+        </div>
+        <div class="stat-box msc-toggle-box" id="commentToggleBox">
+            <div class="stat-label">Comment</div>
+            <div class="stat-value msc-toggle-value" id="commentToggleLabel">💬 Open</div>
+        </div>
     </div>
+
+    <!-- ─────────── Live comment/chat (reusable msc-* component) ─────────── -->
+    <div class="msc-root">
+        <section class="msc-panel" id="mscPanel" hidden>
+            <div class="msc-panel-head">
+                <span class="msc-panel-title">💬 Live Chat</span>
+                <div class="msc-panel-head-right">
+                    <span class="msc-panel-sub" id="mscViewerSub">0 watching</span>
+                    <button type="button" class="msc-icon-btn msc-settings-btn" id="mscSettingsBtn" title="Profile Settings">⚙️</button>
+                </div>
+            </div>
+
+            <div class="msc-feed" id="mscFeed">
+                <div class="msc-empty" id="mscEmpty">Abhi tak koi comment nahi hai — sabse pehle aap likhiye! 👋</div>
+            </div>
+
+            <div class="msc-emoji-picker" id="mscEmojiPicker" hidden></div>
+
+            <div class="msc-composer">
+                <button type="button" class="msc-icon-btn" id="mscEmojiBtn" title="Emoji">😊</button>
+                <button type="button" class="msc-icon-btn" id="mscImageBtn" title="Image bhejein">🖼️</button>
+                <input type="file" id="mscImageInput" accept="image/*" hidden>
+                <div class="msc-input-wrap">
+                    <div class="msc-image-preview" id="mscImagePreview" hidden>
+                        <img id="mscImagePreviewImg" alt="preview">
+                        <button type="button" class="msc-image-remove" id="mscImageRemove">✕</button>
+                    </div>
+                    <textarea class="msc-textarea" id="mscTextarea" rows="1" maxlength="1000" placeholder="Comment likhein…"></textarea>
+                </div>
+                <button type="button" class="msc-send-btn" id="mscSendBtn" title="Send">➤</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Profile create/settings modal -->
+    <div class="msc-modal-overlay" id="mscProfileOverlay" hidden>
+        <div class="msc-modal">
+            <h3>Apni Profile Banayein</h3>
+            <p class="msc-modal-hint">Comment karne se pehle apna naam aur (optional) photo daalein — ye har comment ke saath dikhega.</p>
+            <div class="msc-modal-avatar-row">
+                <div class="msc-avatar-pick" id="mscAvatarPick">
+                    <img id="mscAvatarPickImg" alt="" hidden>
+                    <span id="mscAvatarPickIcon">📷</span>
+                </div>
+                <input type="file" id="mscAvatarInput" accept="image/*" hidden>
+            </div>
+            <input type="text" id="mscNameInput" maxlength="15" placeholder="Aapka naam">
+            <div class="msc-modal-counter" id="mscNameCounter">0/15</div>
+            <div class="msc-modal-actions">
+                <button type="button" class="msc-modal-cancel" id="mscProfileCancel">Cancel</button>
+                <button type="button" class="msc-modal-save" id="mscProfileSave" disabled>Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="msc-toast" id="mscToast"></div>
 </main>
 
 <footer>Made With Love ❤️| Care 🫂</footer>
@@ -255,6 +320,7 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
     var NAME = {{ name|tojson }};
     var LIVE_CODE = {{ (live_code or "")|tojson }};
     var LIVE_ORIGINAL_URL = {{ (live_original_url or "")|tojson }};
+    window.MSC_ROOM = NAME; // room key for the live comment/chat component (static/js/comments.js)
 
     var video = document.getElementById("video");
     var shell = document.getElementById("shell");
@@ -706,5 +772,6 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
     startLive();
 })();
 </script>
+<script src="/static/js/comments.js" defer></script>
 </body>
 </html>
