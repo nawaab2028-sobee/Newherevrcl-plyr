@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 from urllib.parse import urljoin, urlparse, parse_qsl, urlencode, urlunparse, quote
 
 import requests
+from bson import ObjectId
+from bson.errors import InvalidId
 from flask import (
     Flask, render_template, request, jsonify, redirect, url_for,
     session, Response,
@@ -18,6 +20,11 @@ from flask import (
 
 from utils.db import get_db
 from utils.text import display_title
+from utils.comments import (
+    MAX_AVATAR_STORE_LEN, MAX_IMAGE_STORE_LEN,
+    clean_client_id, clean_name, clean_room, clean_text,
+    serialize_comment, valid_data_url,
+)
 
 # ─── Configuration ──────────────────────────────────────────────────────────
 # Public domain used in every generated link. ONLY line to edit if this
@@ -50,6 +57,37 @@ flask_app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=12)
 
 db = get_db()
 lectures_col = db["lectures"]
+comments_col = db["comments"]
+try:
+    # Idempotent — cheap no-op on warm/cold starts once it exists.
+    comments_col.create_index([("room", 1), ("created_at", 1)])
+except Exception:
+    pass
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  LIVE VIEWER PRESENCE (backend memory — same pattern as LIVE_CODES above)
+#  Purpose: "kitne log abhi stream dekh rahe hain" ke liye ek halka
+#  heartbeat — har client ~15s me ek ping bhejta hai, hum sirf pichhle
+#  30s me ping karne waalon ko "active" maante hain. Mongo me nahi likha
+#  jaata (ye purely ephemeral hai) — cross-instance thoda approximate ho
+#  sakta hai lekin single-process Flask/Render/local ke liye bilkul real.
+# ═══════════════════════════════════════════════════════════════════════════
+VIEWER_WINDOW = timedelta(seconds=30)
+VIEWERS = {}  # room -> {client_id: last_seen(datetime)}
+VIEWERS_LOCK = threading.Lock()
+
+
+def _room_viewer_count(room):
+    now = datetime.utcnow()
+    with VIEWERS_LOCK:
+        bucket = VIEWERS.get(room)
+        if not bucket:
+            return 0
+        stale = [cid for cid, seen in bucket.items() if now - seen > VIEWER_WINDOW]
+        for cid in stale:
+            bucket.pop(cid, None)
+        return len(bucket)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -608,6 +646,115 @@ def play_live_code(code, original_url):
         live_code=code,
         live_original_url=full_url,
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  LIVE COMMENT / CHAT (real MongoDB storage — collection: "comments")
+#  Profile (name/photo) is stored client-side in the browser's
+#  localStorage — the server never sees who's who beyond an opaque
+#  client_id used only to let someone delete their own message.
+# ═══════════════════════════════════════════════════════════════════════════
+
+@flask_app.route("/api/room/<room>/heartbeat", methods=["POST"])
+def room_heartbeat(room):
+    room = clean_room(room)
+    data = request.get_json(silent=True) or {}
+    client_id = clean_client_id(data.get("client_id"))
+    if not client_id:
+        return jsonify({"ok": False, "error": "client_id required"}), 400
+    with VIEWERS_LOCK:
+        VIEWERS.setdefault(room, {})[client_id] = datetime.utcnow()
+    return jsonify({"ok": True, "count": _room_viewer_count(room)})
+
+
+@flask_app.route("/api/room/<room>/viewers")
+def room_viewers(room):
+    return jsonify({"ok": True, "count": _room_viewer_count(clean_room(room))})
+
+
+@flask_app.route("/api/room/<room>/comments", methods=["GET"])
+def room_comments_list(room):
+    room = clean_room(room)
+    since_raw = request.args.get("since")
+    query = {"room": room}
+
+    if since_raw:
+        try:
+            since_dt = datetime.fromisoformat(since_raw.replace("Z", ""))
+            query["created_at"] = {"$gt": since_dt}
+        except ValueError:
+            since_raw = None  # ignore bad param, fall through to normal query
+
+    if since_raw:
+        docs = list(comments_col.find(query).sort("created_at", 1).limit(200))
+    else:
+        # Initial load: latest 200, oldest-first for natural feed order.
+        docs = list(comments_col.find({"room": room}).sort("created_at", -1).limit(200))
+        docs.reverse()
+
+    return jsonify({"ok": True, "comments": [serialize_comment(d) for d in docs]})
+
+
+@flask_app.route("/api/room/<room>/comments", methods=["POST"])
+def room_comments_create(room):
+    room = clean_room(room)
+    data = request.get_json(silent=True) or {}
+
+    client_id = clean_client_id(data.get("client_id"))
+    if not client_id:
+        return jsonify({"ok": False, "error": "Profile missing — pehle profile banayein."}), 400
+
+    name = clean_name(data.get("name"))
+    if not name:
+        return jsonify({"ok": False, "error": "Naam required hai."}), 400
+
+    avatar = data.get("avatar") or None
+    if not valid_data_url(avatar, MAX_AVATAR_STORE_LEN):
+        return jsonify({"ok": False, "error": "Profile photo invalid ya bahut badi hai."}), 400
+
+    text = clean_text(data.get("text"))
+    image = data.get("image") or None
+    if not valid_data_url(image, MAX_IMAGE_STORE_LEN):
+        return jsonify({"ok": False, "error": "Image invalid ya bahut badi hai."}), 400
+
+    if not text and not image:
+        return jsonify({"ok": False, "error": "Khaali comment nahi bhej sakte."}), 400
+
+    doc = {
+        "room": room,
+        "client_id": client_id,
+        "name": name,
+        "avatar": avatar,
+        "text": text,
+        "image": image,
+        "created_at": datetime.utcnow(),
+    }
+    result = comments_col.insert_one(doc)
+    doc["_id"] = result.inserted_id
+    return jsonify({"ok": True, "comment": serialize_comment(doc)})
+
+
+@flask_app.route("/api/room/<room>/comments/<comment_id>", methods=["DELETE"])
+def room_comments_delete(room, comment_id):
+    room = clean_room(room)
+    data = request.get_json(silent=True) or {}
+    client_id = clean_client_id(data.get("client_id"))
+    if not client_id:
+        return jsonify({"ok": False, "error": "client_id required"}), 400
+
+    try:
+        oid = ObjectId(comment_id)
+    except (InvalidId, TypeError):
+        return jsonify({"ok": False, "error": "Invalid comment id"}), 400
+
+    doc = comments_col.find_one({"_id": oid, "room": room})
+    if not doc:
+        return jsonify({"ok": False, "error": "Comment nahi mila."}), 404
+    if doc.get("client_id") != client_id:
+        return jsonify({"ok": False, "error": "Sirf apna comment delete kar sakte hain."}), 403
+
+    comments_col.delete_one({"_id": oid})
+    return jsonify({"ok": True})
 
 
 def run_flask():
