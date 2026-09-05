@@ -30,7 +30,7 @@ from utils.comments import (
 # Public domain used in every generated link. ONLY line to edit if this
 # service's Render domain ever changes.
 PUBLIC_BASE_URL = os.environ.get(
-    "PUBLIC_BASE_URL", "https://pw-universal-live-pro-player-v3.railway.app"
+    "PUBLIC_BASE_URL", "pw-universal-live-pro-player-v3.up.railway.app"
 )
 # "https://" scheme zaroori hai warna generated link (jaise
 # "domain.com/CODE/https://...") ek valid absolute URL nahi banta —
