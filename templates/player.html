@@ -37,7 +37,7 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
     font-family:"Inter","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;
-    background:var(--bg);
+    background:linear-gradient(160deg, #FFD400 0%, #FF7A00 55%, #FF5500 100%);
     color:var(--text); min-height:100vh;
     display:flex; flex-direction:column;
     -webkit-font-smoothing:antialiased;
@@ -76,7 +76,7 @@ main { flex:1; display:flex; flex-direction:column; align-items:center; padding:
 .shell {
     position:relative; width:100%; max-width:960px; aspect-ratio:16/9;
     background:#000; border-radius:14px; overflow:hidden;
-    border:1px solid var(--border); box-shadow:0 24px 70px rgba(0,0,0,.55);
+    border:4px solid #22C55E; box-shadow:0 0 24px rgba(34,197,94,.55), 0 24px 70px rgba(0,0,0,.55);
 }
 #video { width:100%; height:100%; object-fit:contain; background:#000; display:block; }
 
@@ -162,11 +162,23 @@ main { flex:1; display:flex; flex-direction:column; align-items:center; padding:
     width:100%; max-width:960px; margin-top:18px;
 }
 .stat-box {
-    background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:14px 16px;
+    background:var(--surface2); border:2px solid var(--border); border-radius:12px; padding:14px 16px;
     transition:border-color .2s, transform .2s, box-shadow .2s;
 }
-.stat-box:hover { border-color:var(--accent); transform:translateY(-1px); box-shadow:0 8px 22px rgba(0,0,0,.35); }
+.stat-box:hover { transform:translateY(-1px); box-shadow:0 8px 22px rgba(0,0,0,.35); }
 .stat-box.wide { grid-column:1 / -1; }
+
+/* Har box ka apna alag outer-border colour (order: Status, Duration, Quality,
+   Audio, Buffer, Latency, Video Progress, User's, Comment) */
+.stats-grid .stat-box:nth-of-type(1) { border-color:#00D4FF; }
+.stats-grid .stat-box:nth-of-type(2) { border-color:#FF8C3D; }
+.stats-grid .stat-box:nth-of-type(3) { border-color:#9B5CF6; }
+.stats-grid .stat-box:nth-of-type(4) { border-color:#2DD4A7; }
+.stats-grid .stat-box:nth-of-type(5) { border-color:#FF6FA5; }
+.stats-grid .stat-box:nth-of-type(6) { border-color:#FFC845; }
+.stats-grid .stat-box:nth-of-type(7) { border-color:#4FD1FF; }
+.stats-grid .stat-box:nth-of-type(8) { border-color:#22C55E; }
+.stats-grid .stat-box:nth-of-type(9) { border-color:#FF3B8D; }
 .stat-label {
     font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:7px;
     font-weight:600; display:flex; align-items:center; gap:6px;
