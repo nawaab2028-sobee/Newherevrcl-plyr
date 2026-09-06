@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PW LIVE PLAYER</title>
+<title>USP LIVE PLAYER</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
 <link rel="stylesheet" href="/static/css/comments.css">
 <style>
@@ -37,7 +37,7 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
     font-family:"Inter","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;
-    background:linear-gradient(160deg, #FFD400 0%, #FF7A00 55%, #FF5500 100%);
+    background:linear-gradient(160deg, #536DFE 0%, #000000 55%, #000000 100%);
     color:var(--text); min-height:100vh;
     display:flex; flex-direction:column;
     -webkit-font-smoothing:antialiased;
@@ -225,8 +225,8 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
     <div class="brand">
         <div class="logo">▶</div>
         <div>
-            <h1>PW UNIVERSAL PLAYER</h1>
-            <small>Premium Server</small>
+            <h1>USP LIVE PLAYER</h1>
+            <small>Universal Sensei Player</small>
         </div>
     </div>
     <div class="live-badge" id="liveBadge">
@@ -259,7 +259,7 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
         <!-- Overlay -->
         <div class="overlay" id="overlay">
             <div class="spinner" id="spinner"></div>
-            <div class="msg" id="overlayMsg">Loading Please Wait...</div>
+            <div class="msg" id="overlayMsg">Class Loading Please Wait...</div>
         </div>
     </div>
 
@@ -280,11 +280,11 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
             <div class="stat-label">Audio 🔊</div>
             <button type="button" class="audio-toggle on" id="audioToggle"><span id="audioToggleText">ON</span></button>
         </div>
-        <div class="stat-box">
+        <div class="stat-box" style="display:none;">
             <div class="stat-label">Buffer</div>
             <div class="stat-value" id="statBuffer">0.0s</div>
         </div>
-        <div class="stat-box">
+        <div class="stat-box" style="display:none;">
             <div class="stat-label">Latency</div>
             <div class="stat-value" id="statLatency">--</div>
         </div>
@@ -296,11 +296,11 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
                 <span class="progress-time right" id="progressRightTime">00:00:00</span>
             </div>
         </div>
-        <div class="stat-box">
+        <div class="stat-box" style="display:none;">
             <div class="stat-label">User's</div>
             <div class="stat-value" id="statViewers">0</div>
         </div>
-        <div class="stat-box msc-toggle-box" id="commentToggleBox">
+        <div class="stat-box msc-toggle-box" id="commentToggleBox" style="display:none;">
             <div class="stat-label">Comment</div>
             <div class="stat-value msc-toggle-value" id="commentToggleLabel">💬 Open</div>
         </div>
@@ -324,8 +324,8 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
             <div class="msc-emoji-picker" id="mscEmojiPicker" hidden></div>
 
             <div class="msc-composer">
-                <button type="button" class="msc-icon-btn" id="mscEmojiBtn" title="Emoji">Emoji🥰</button>
-                <button type="button" class="msc-icon-btn" id="mscImageBtn" title="Image bhejein">Photo🖼️</button>
+                <button type="button" class="msc-icon-btn" id="mscEmojiBtn" title="Emoji">🤩</button>
+                <button type="button" class="msc-icon-btn" id="mscImageBtn" title="Image bhejein">Pic🖼️</button>
                 <input type="file" id="mscImageInput" accept="image/*" hidden>
                 <div class="msc-input-wrap">
                     <div class="msc-image-preview" id="mscImagePreview" hidden>
@@ -347,7 +347,7 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
             <div class="msc-modal-avatar-row">
                 <div class="msc-avatar-pick" id="mscAvatarPick">
                     <img id="mscAvatarPickImg" alt="" hidden>
-                    <span id="mscAvatarPickIcon">pick a photo 📷</span>
+                    <span id="mscAvatarPickIcon">Pic📷</span>
                 </div>
                 <input type="file" id="mscAvatarInput" accept="image/*" hidden>
             </div>
@@ -363,7 +363,7 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
     <div class="msc-toast" id="mscToast"></div>
 </main>
 
-<footer>Made With Love ❤️| Care 🫂|Free Education 💫</footer>
+<footer>Made With Love ❤️| Caring Students🫂|</footer>
 
 <script>
 (function () {
