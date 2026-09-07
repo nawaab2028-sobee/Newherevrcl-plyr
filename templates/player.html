@@ -696,7 +696,36 @@ footer { text-align:center; color:var(--muted); font-size:11.5px; padding:18px 1
         if (!document.fullscreenElement && screen.orientation && screen.orientation.unlock) {
             try { screen.orientation.unlock(); } catch (e) {}
         }
+        showControls(); // orientation/layout change ke turant baad bhi controls dikhne chahiye
     });
+
+    // ─────────── Controls show/auto-hide (touch-safe) ───────────
+    // Pehle sirf CSS ":hover" pe depend karta tha — touch devices par
+    // ":hover" tap se "stuck"/"sticky" ho jaata hai aur agla tap kahin
+    // aur lagte hi turant hat jaata hai, isi wajah se controls bar
+    // (Go Live sahit) flicker karke aadha-adhura dikhta/chhup jaata tha —
+    // player page aur fullscreen dono mein. Fix: visibility ab JS se
+    // control hoti hai (tap/click/mousemove pe show, chhod dene par
+    // kuchh der baad hide — sirf jab video play ho raha ho), CSS hover
+    // sirf ek fallback ki tarah rehta hai.
+    var controlsHideTimer = null;
+    function showControls() {
+        controls.classList.add("force-show");
+        clearTimeout(controlsHideTimer);
+        controlsHideTimer = setTimeout(function () {
+            if (!video.paused && !video.ended) controls.classList.remove("force-show");
+        }, 3000);
+    }
+    shell.addEventListener("touchstart", showControls, { passive: true });
+    shell.addEventListener("mousemove", showControls);
+    shell.addEventListener("click", showControls);
+    // Controls bar ke andar tap/hover karte waqt hide na ho (button dabane
+    // se pehle hi gayab na ho jaaye).
+    controls.addEventListener("touchstart", function () { clearTimeout(controlsHideTimer); }, { passive: true });
+    controls.addEventListener("mouseenter", function () { clearTimeout(controlsHideTimer); });
+    controls.addEventListener("mouseleave", showControls);
+    video.addEventListener("pause", showControls);
+    showControls(); // initial state — load hote hi ek baar dikhao
 
     // Go Live — live edge pe jump
     function updateGoLiveState() {
