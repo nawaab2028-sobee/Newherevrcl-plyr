@@ -30,7 +30,7 @@ from utils.comments import (
 # Public domain used in every generated link. ONLY line to edit if this
 # service's Render domain ever changes.
 PUBLIC_BASE_URL = os.environ.get(
-    "PUBLIC_BASE_URL", "usp-live-player-v1.vercel.app"
+    "PUBLIC_BASE_URL", "usp-live-player-v2-ms.vercel.app"
 )
 # "https://" scheme zaroori hai warna generated link (jaise
 # "domain.com/CODE/https://...") ek valid absolute URL nahi banta —
